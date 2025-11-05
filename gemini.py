@@ -180,8 +180,10 @@ class AddPage(BasePage, FormMixin):
         self.threshold = 350 # Pixel width to stack
         self.is_horizontal = None # Track layout state
         self.bind("<Configure>", self.on_resize)
-
+        self.after(100, self.trigger_resize) 
     # --- NEW: Handles responsive button layout ---
+    def trigger_resize(self):
+        self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
     def on_resize(self, event):
         # Ignore initial event when widget hasn't drawn
         if event.width == 1 and event.height == 1:
@@ -211,8 +213,7 @@ class AddPage(BasePage, FormMixin):
         self.a_text.delete("1.0", tk.END)
         # Force redraw on refresh
         self.is_horizontal = None
-        self.after(50, lambda: self.on_resize(tk.Event())) # Fake event to trigger layout
-
+        self.after(50, self.trigger_resize)
     def add(self):
         q = self.q_text.get("1.0", tk.END).strip()
         a = self.a_text.get("1.0", tk.END).strip()
@@ -263,6 +264,7 @@ class EditPage(BasePage, FormMixin):
         self.threshold = 350 # Pixel width to stack
         self.is_horizontal = None # Track layout state
         self.bind("<Configure>", self.on_resize)
+        self.after(100, self.trigger_resize)
 
     # --- NEW: Handles responsive button layout ---
     def on_resize(self, event):
@@ -284,7 +286,8 @@ class EditPage(BasePage, FormMixin):
             self.save_button.pack(side='left', fill='x', expand=True, padx=(0, 5))
             self.back_button.pack(side='right', fill='x', expand=True, padx=(5, 0))
             self.is_horizontal = True
-
+    def trigger_resize(self):
+        self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
     # --- IMPLEMENTED from BasePage ---
     def refresh(self):
         self.listbox.delete(0, tk.END)
@@ -295,8 +298,7 @@ class EditPage(BasePage, FormMixin):
             self.listbox.insert(tk.END, q[:60])
         # Force redraw on refresh
         self.is_horizontal = None
-        self.after(50, lambda: self.on_resize(tk.Event()))
-
+        self.after(50, self.trigger_resize)
     def load(self, event):
         try:
             sel_index = self.listbox.curselection()[0]
@@ -443,8 +445,11 @@ class PracticePage(BasePage):
         self.threshold = 350 # Pixel width to stack
         self.is_horizontal = None # Track layout state
         self.bind("<Configure>", self.on_resize)
+        self.after(100, self.trigger_resize)
 
     # --- NEW: Handles responsive button layout ---
+    def trigger_resize(self):
+        self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
     def on_resize(self, event):
         if event.width == 1 and event.height == 1:
             return 
@@ -478,8 +483,7 @@ class PracticePage(BasePage):
         self.show_question()
         # Force redraw on refresh
         self.is_horizontal = None
-        self.after(50, lambda: self.on_resize(tk.Event())) # Fake event to trigger layout
-
+        self.after(50, self.trigger_resize)
     def show_question(self):
         if self.index < len(self.cards):
             q, _ = self.cards[self.index]
