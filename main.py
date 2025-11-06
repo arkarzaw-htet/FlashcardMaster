@@ -17,8 +17,16 @@ except ImportError:
         print("Error: Tkinter/Tkinter module not found. The application cannot run.")
         exit()
 
+# --- NEW COLOR PALETTE (Refined Green/Accent) ---
+COLOR_PRIMARY_DARK = '#36394E'   # Deep Indigo/Slate Background
+COLOR_SECONDARY = '#454866'      # Slightly Lighter Panel Background
+COLOR_ACCENT = "#0F1BA3"         # Deep Blue Accent
+COLOR_SUCCESS_GREEN = "#00be20"  # Vibrant Success Green
+COLOR_TEXT_LIGHT = 'white'
+COLOR_TEXT_DARK = '#2C2F43'      # Dark Text
+COLOR_CARD_BG = 'white'
 
-# --- COMPOSITION: StatTracker Class (No @property) ---
+# --- COMPOSITION: StatTracker Class ---
 class StatTracker:
     """Manages and calculates statistics for the PracticePage."""
     def __init__(self):
@@ -58,14 +66,14 @@ class FlashcardApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Flashcard Master")
-        self.configure(bg='#4255ff')
+        self.configure(bg=COLOR_PRIMARY_DARK) 
         
-        # 1. 👻 HIDE THE ROOT WINDOW IMMEDIATELY
-        self.withdraw() # Prevents the blank window flash
+        # Prevent the blank window flash
+        self.withdraw() 
         
         # --- WINDOW CENTERING CALCULATION ---
-        window_width = 700
-        window_height = 550
+        window_width = 1000 
+        window_height = 800 
         
         self.update_idletasks() 
 
@@ -75,7 +83,6 @@ class FlashcardApp(tk.Tk):
         center_x = int((screen_width / 2) - (window_width / 2))
         center_y = int((screen_height / 2) - (window_height / 2))
 
-        # Set geometry: size + position
         self.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
         
         self.data_file = "flashcards.json"
@@ -84,7 +91,7 @@ class FlashcardApp(tk.Tk):
         self.title_font = font.Font(family="Helvetica", size=28, weight="bold")
         self.button_font = font.Font(family="Helvetica", size=14, weight="bold")
         
-        container = tk.Frame(self, bg='#4255ff')
+        container = tk.Frame(self, bg=COLOR_SECONDARY) 
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -99,7 +106,7 @@ class FlashcardApp(tk.Tk):
 
         self.show_frame("MainMenu")
         
-        # 2. 🖥️ SHOW THE WINDOW ONLY AFTER IT'S FULLY CONFIGURED AND POSITIONED
+        # Show the window only after it's fully configured
         self.deiconify()
         
     def show_frame(self, page_name):
@@ -160,7 +167,7 @@ class FlashcardApp(tk.Tk):
 class BasePage(tk.Frame, ABC):
     """Abstract base class for all pages, requires a refresh method."""
     def __init__(self, parent, controller):
-        super().__init__(parent, bg='#4255ff')
+        super().__init__(parent, bg=COLOR_SECONDARY) 
         self.controller = controller
 
     @abstractmethod
@@ -172,14 +179,14 @@ class FormMixin:
     """Mixin to create standard Question and Answer text fields."""
     def create_form_fields(self, parent_frame):
         tk.Label(parent_frame, text="Question:", font=('Helvetica', 12, 'bold'),
-                bg='white').pack(anchor='w', padx=20, pady=(20, 5))
-        q_text = tk.Text(parent_frame, height=4, font=('Helvetica', 11))
-        q_text.pack(fill='x', padx=20)
+                bg=COLOR_CARD_BG, fg=COLOR_TEXT_DARK).pack(anchor='w', padx=30, pady=(20, 5)) 
+        q_text = tk.Text(parent_frame, height=5, font=('Helvetica', 11), bg='#f7f7f7', fg=COLOR_TEXT_DARK)
+        q_text.pack(fill='x', padx=30)
         
         tk.Label(parent_frame, text="Answer:", font=('Helvetica', 12, 'bold'),
-                bg='white').pack(anchor='w', padx=20, pady=(20, 5))
-        a_text = tk.Text(parent_frame, height=4, font=('Helvetica', 11))
-        a_text.pack(fill='x', padx=20, pady=(0, 20))
+                bg=COLOR_CARD_BG, fg=COLOR_TEXT_DARK).pack(anchor='w', padx=30, pady=(20, 5)) 
+        a_text = tk.Text(parent_frame, height=5, font=('Helvetica', 11), bg='#f7f7f7', fg=COLOR_TEXT_DARK)
+        a_text.pack(fill='x', padx=30, pady=(0, 30)) 
         
         return q_text, a_text
 
@@ -188,24 +195,24 @@ class MainMenu(BasePage):
         super().__init__(parent, controller)
         
         tk.Label(self, text="Flashcard Master", font=controller.title_font, 
-                fg='white', bg='#4255ff').pack(pady=40)
+                fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY).pack(pady=60) 
         
         self.count_label = tk.Label(self, text="", 
-                font=('Helvetica', 14), fg='white', bg='#4255ff')
-        self.count_label.pack(pady=10)
+                font=('Helvetica', 16), fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY) 
+        self.count_label.pack(pady=20) 
         
         buttons = [
-            ("Add Flashcard", lambda: controller.show_frame("AddPage"), '#10b981'),
-            ("Edit Flashcards", lambda: controller.show_frame_if_cards("EditPage"), '#f59e0b'),
-            ("Delete Flashcards", lambda: controller.show_frame_if_cards("DeletePage"), '#ef4444'),
-            ("Practice Mode", lambda: controller.show_frame_if_cards("PracticePage"), '#ffffff')
+            ("Add Flashcard", lambda: controller.show_frame("AddPage"), COLOR_SUCCESS_GREEN),  # Use new green
+            ("Edit Flashcards", lambda: controller.show_frame_if_cards("EditPage"), '#f59e0b'), 
+            ("Delete Flashcards", lambda: controller.show_frame_if_cards("DeletePage"), '#ef4444'), 
+            ("Practice Mode", lambda: controller.show_frame_if_cards("PracticePage"), COLOR_ACCENT) 
         ]
         
         for text, cmd, color in buttons:
             btn = tk.Button(self, text=text, font=controller.button_font, bg=color,
-                          fg='#4255ff' if color == '#ffffff' else 'white',
-                          relief='flat', bd=0, pady=15, cursor='hand2', command=cmd)
-            btn.pack(fill='x', padx=60, pady=8)
+                          fg=COLOR_TEXT_LIGHT if color != COLOR_CARD_BG else COLOR_TEXT_DARK,
+                          relief='flat', bd=0, pady=18, cursor='hand2', command=cmd) 
+            btn.pack(fill='x', padx=100, pady=10) 
 
     def refresh(self):
         count = len(self.controller.flashcards)
@@ -215,25 +222,25 @@ class AddPage(BasePage, FormMixin):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         
-        tk.Label(self, text="Add New Flashcard", font=('Helvetica', 18, 'bold'),
-                fg='white', bg='#4255ff').pack(pady=20)
+        tk.Label(self, text="Add New Flashcard", font=('Helvetica', 20, 'bold'), 
+                fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY).pack(pady=30) 
         
-        frame = tk.Frame(self, bg='white')
-        frame.pack(fill='both', expand=True, padx=40, pady=20)
+        frame = tk.Frame(self, bg=COLOR_CARD_BG) 
+        frame.pack(fill='both', expand=True, padx=80, pady=30) 
         
         self.q_text, self.a_text = self.create_form_fields(frame)
         
-        self.btn_frame = tk.Frame(frame, bg='white')
-        self.btn_frame.pack(fill='x', padx=20, side='bottom', pady=(0, 20))
+        self.btn_frame = tk.Frame(frame, bg=COLOR_CARD_BG) 
+        self.btn_frame.pack(fill='x', padx=30, side='bottom', pady=(0, 30)) 
         
-        self.add_button = tk.Button(self.btn_frame, text="Add", font=('Helvetica', 12, 'bold'), bg='#10b981',
-                 fg='white', relief='flat', pady=10, command=self.add)
+        self.add_button = tk.Button(self.btn_frame, text="Add", font=('Helvetica', 13, 'bold'), bg=COLOR_SUCCESS_GREEN, # Use new green
+                 fg=COLOR_TEXT_LIGHT, relief='flat', pady=12, command=self.add) 
         
-        self.back_button = tk.Button(self.btn_frame, text="Back", font=('Helvetica', 12, 'bold'), bg='#6b7280',
-                 fg='white', relief='flat', pady=10, 
-                 command=lambda: controller.show_frame("MainMenu"))
+        self.back_button = tk.Button(self.btn_frame, text="Back", font=('Helvetica', 13, 'bold'), bg='#6b7280',
+                 fg=COLOR_TEXT_LIGHT, relief='flat', pady=12, 
+                 command=lambda: controller.show_frame("MainMenu")) 
         
-        self.threshold = 350
+        self.threshold = 400 
         self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
         self.after(100, self.trigger_resize)
@@ -250,15 +257,15 @@ class AddPage(BasePage, FormMixin):
         if width < self.threshold and self.is_horizontal is not False:
             self.add_button.pack_forget()
             self.back_button.pack_forget()
-            self.add_button.pack(side='top', fill='x', pady=(0, 5))
-            self.back_button.pack(side='top', fill='x', pady=(5, 0))
+            self.add_button.pack(side='top', fill='x', pady=(0, 8))
+            self.back_button.pack(side='top', fill='x', pady=(8, 0))
             self.is_horizontal = False
         
         elif width >= self.threshold and self.is_horizontal is not True:
             self.add_button.pack_forget()
             self.back_button.pack_forget()
-            self.add_button.pack(side='left', fill='x', expand=True, padx=(0, 5))
-            self.back_button.pack(side='right', fill='x', expand=True, padx=(5, 0))
+            self.add_button.pack(side='left', fill='x', expand=True, padx=(0, 8))
+            self.back_button.pack(side='right', fill='x', expand=True, padx=(8, 0))
             self.is_horizontal = True
 
     def refresh(self):
@@ -287,32 +294,32 @@ class EditPage(BasePage, FormMixin):
         super().__init__(parent, controller)
         self.selected = None
         
-        tk.Label(self, text="Edit Flashcards", font=('Helvetica', 18, 'bold'),
-                fg='white', bg='#4255ff').pack(pady=20)
+        tk.Label(self, text="Edit Flashcards", font=('Helvetica', 20, 'bold'),
+                fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY).pack(pady=30)
         
-        frame = tk.Frame(self, bg='white')
-        frame.pack(fill='both', expand=True, padx=40, pady=20)
+        frame = tk.Frame(self, bg=COLOR_CARD_BG)
+        frame.pack(fill='both', expand=True, padx=80, pady=30)
         
-        self.listbox = tk.Listbox(frame, font=('Helvetica', 10))
-        self.listbox.pack(side='left', fill='both', expand=True, padx=(20, 10), pady=20)
+        self.listbox = tk.Listbox(frame, font=('Helvetica', 12), borderwidth=1, relief="solid")
+        self.listbox.pack(side='left', fill='both', expand=True, padx=(30, 15), pady=30)
         self.listbox.bind("<<ListboxSelect>>", self.load)
         
-        right = tk.Frame(frame, bg='white')
-        right.pack(side='right', fill='both', expand=True, padx=(10, 20), pady=20)
+        right = tk.Frame(frame, bg=COLOR_CARD_BG)
+        right.pack(side='right', fill='both', expand=True, padx=(15, 30), pady=30)
         
         self.q_text, self.a_text = self.create_form_fields(right)
         
-        self.btn_frame = tk.Frame(right, bg='white')
-        self.btn_frame.pack(fill='x', side='bottom', pady=(0, 20))
+        self.btn_frame = tk.Frame(right, bg=COLOR_CARD_BG)
+        self.btn_frame.pack(fill='x', side='bottom', pady=(0, 30))
         
-        self.save_button = tk.Button(self.btn_frame, text="Save", font=('Helvetica', 11, 'bold'), bg='#f59e0b',
-                 fg='white', relief='flat', pady=10, command=self.save)
+        self.save_button = tk.Button(self.btn_frame, text="Save", font=('Helvetica', 13, 'bold'), bg='#f59e0b',
+                 fg=COLOR_TEXT_LIGHT, relief='flat', pady=12, command=self.save)
 
-        self.back_button = tk.Button(self.btn_frame, text="Back", font=('Helvetica', 11, 'bold'), bg='#6b7280',
-                 fg='white', relief='flat', pady=10, 
+        self.back_button = tk.Button(self.btn_frame, text="Back", font=('Helvetica', 13, 'bold'), bg='#6b7280',
+                 fg=COLOR_TEXT_LIGHT, relief='flat', pady=12, 
                  command=lambda: controller.show_frame("MainMenu"))
         
-        self.threshold = 350
+        self.threshold = 400
         self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
         self.after(100, self.trigger_resize)
@@ -326,15 +333,15 @@ class EditPage(BasePage, FormMixin):
         if width < self.threshold and self.is_horizontal is not False:
             self.save_button.pack_forget()
             self.back_button.pack_forget()
-            self.save_button.pack(side='top', fill='x', pady=(0, 5))
-            self.back_button.pack(side='top', fill='x', pady=(5, 0))
+            self.save_button.pack(side='top', fill='x', pady=(0, 8))
+            self.back_button.pack(side='top', fill='x', pady=(8, 0))
             self.is_horizontal = False
         
         elif width >= self.threshold and self.is_horizontal is not True:
             self.save_button.pack_forget()
             self.back_button.pack_forget()
-            self.save_button.pack(side='left', fill='x', expand=True, padx=(0, 5))
-            self.back_button.pack(side='right', fill='x', expand=True, padx=(5, 0))
+            self.save_button.pack(side='left', fill='x', expand=True, padx=(0, 8))
+            self.back_button.pack(side='right', fill='x', expand=True, padx=(8, 0))
             self.is_horizontal = True
             
     def trigger_resize(self):
@@ -346,7 +353,7 @@ class EditPage(BasePage, FormMixin):
         self.a_text.delete("1.0", tk.END)
         self.selected = None
         for q in sorted(self.controller.flashcards.keys()):
-            self.listbox.insert(tk.END, q[:60])
+            self.listbox.insert(tk.END, q[:60] + ("..." if len(q) > 60 else ""))
         self.is_horizontal = None
         self.after(50, self.trigger_resize)
         
@@ -389,30 +396,30 @@ class DeletePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         
-        tk.Label(self, text="Delete Flashcards", font=('Helvetica', 18, 'bold'),
-                fg='white', bg='#4255ff').pack(pady=20)
+        tk.Label(self, text="Delete Flashcards", font=('Helvetica', 20, 'bold'),
+                fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY).pack(pady=30)
         
-        frame = tk.Frame(self, bg='white')
-        frame.pack(fill='both', expand=True, padx=40, pady=20)
+        frame = tk.Frame(self, bg=COLOR_CARD_BG)
+        frame.pack(fill='both', expand=True, padx=100, pady=30) 
         
-        self.listbox = tk.Listbox(frame, font=('Helvetica', 10))
-        self.listbox.pack(fill='both', expand=True, padx=20, pady=(20, 10))
+        self.listbox = tk.Listbox(frame, font=('Helvetica', 12), borderwidth=1, relief="solid")
+        self.listbox.pack(fill='both', expand=True, padx=30, pady=(30, 15)) 
         
-        btn_frame = tk.Frame(frame, bg='white')
-        btn_frame.pack(fill='x', padx=20, pady=(10, 20))
+        btn_frame = tk.Frame(frame, bg=COLOR_CARD_BG)
+        btn_frame.pack(fill='x', padx=30, pady=(15, 30)) 
         
-        tk.Button(btn_frame, text="Delete Selected", font=('Helvetica', 12, 'bold'),
-                 bg='#ef4444', fg='white', relief='flat', pady=12,
-                 command=self.delete).pack(side='left', fill='x', expand=True, padx=(0, 5))
+        tk.Button(btn_frame, text="Delete Selected", font=('Helvetica', 13, 'bold'),
+                 bg='#ef4444', fg=COLOR_TEXT_LIGHT, relief='flat', pady=14, 
+                 command=self.delete).pack(side='left', fill='x', expand=True, padx=(0, 8))
 
-        tk.Button(btn_frame, text="Back", font=('Helvetica', 12, 'bold'),
-                 bg='#6b7280', fg='white', relief='flat', pady=12,
-                 command=lambda: controller.show_frame("MainMenu")).pack(side='right', fill='x', expand=True, padx=(5, 0))
+        tk.Button(btn_frame, text="Back", font=('Helvetica', 13, 'bold'),
+                 bg='#6b7280', fg=COLOR_TEXT_LIGHT, relief='flat', pady=14, 
+                 command=lambda: controller.show_frame("MainMenu")).pack(side='right', fill='x', expand=True, padx=(8, 0))
 
     def refresh(self):
         self.listbox.delete(0, tk.END)
         for q in sorted(self.controller.flashcards.keys()):
-            self.listbox.insert(tk.END, q[:70])
+            self.listbox.insert(tk.END, q[:70] + ("..." if len(q) > 70 else ""))
 
     def delete(self):
         try:
@@ -420,11 +427,11 @@ class DeletePage(BasePage):
             keys = sorted(self.controller.flashcards.keys())
             q = keys[sel_index]
             
-            if messagebox.askyesno("Confirm", f"Delete:\n{q[:50]}?"):
+            if messagebox.askyesno("Confirm", f"Delete:\n{q[:50]}...?"):
                 del self.controller.flashcards[q]
                 self.controller.save_flashcards()
                 self.controller.refresh_main_menu_count()
-                messagebox.showinfo("Success", "Deleted!")
+                messagebox.showinfo("Success", "Card Deleted!")
                 self.controller.show_frame("MainMenu")
         except IndexError:
             messagebox.showwarning("No Selection", "Please select a card to delete.")
@@ -433,72 +440,96 @@ class DeletePage(BasePage):
 
 
 class PracticePage(BasePage):
+    # --- STATE CONSTANTS ---
+    QUESTION_STATE = 0
+    ANSWER_STATE = 1
+    
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         
-        # --- COMPOSITION: StatTracker instance ---
         self.stats = StatTracker()
+        self.current_state = self.QUESTION_STATE
         
         self.cards = []
         self.index = 0
-        self.answered = False
         
         tk.Label(self, text="Practice Mode", font=('Helvetica', 20, 'bold'),
-                fg='white', bg='#4255ff').pack(pady=20)
+                fg=COLOR_TEXT_LIGHT, bg=COLOR_SECONDARY).pack(pady=30)
         
-        stat_frame = tk.Frame(self, bg='white')
-        stat_frame.pack(fill='x', padx=40, pady=(0, 10))
+        stat_frame = tk.Frame(self, bg=COLOR_CARD_BG)
+        stat_frame.pack(fill='x', padx=80, pady=(0, 15)) 
         
-        self.progress = tk.Label(stat_frame, text="", font=('Helvetica', 11), bg='white')
-        self.progress.pack(side='left', padx=20, pady=10)
+        self.progress = tk.Label(stat_frame, text="", font=('Helvetica', 12), bg=COLOR_CARD_BG, fg=COLOR_TEXT_DARK)
+        self.progress.pack(side='left', padx=25, pady=12) 
         
-        self.score_lbl = tk.Label(stat_frame, text="Score: 0", font=('Helvetica', 11),
-                                  fg='#10b981', bg='white')
-        self.score_lbl.pack(side='right', padx=20, pady=10)
+        self.score_lbl = tk.Label(stat_frame, text="Score: 0", font=('Helvetica', 12, 'bold'),
+                                  fg=COLOR_SUCCESS_GREEN, bg=COLOR_CARD_BG)
+        self.score_lbl.pack(side='right', padx=25, pady=12) 
         
-        card = tk.Frame(self, bg='white')
-        card.pack(fill='both', expand=True, padx=40, pady=20)
+        card = tk.Frame(self, bg=COLOR_CARD_BG)
+        card.pack(fill='both', expand=True, padx=80, pady=(0, 30))
         
-        bottom_controls = tk.Frame(card, bg='white')
-        bottom_controls.pack(side='bottom', fill='x', padx=40, pady=(10, 20))
+        bottom_controls = tk.Frame(card, bg=COLOR_CARD_BG)
+        bottom_controls.pack(side='bottom', fill='x', padx=40, pady=(15, 30)) 
 
-        main_content = tk.Frame(card, bg='white')
+        main_content = tk.Frame(card, bg=COLOR_CARD_BG)
         main_content.pack(side='top', fill='both', expand=True)
 
-        self.question = tk.Label(main_content, text="Question", font=('Helvetica', 14, 'bold'),
-                                bg='white', wraplength=600)
-        self.question.pack(pady=(30, 20), fill='both', expand=True)
+        # --- SCROLLABLE QUESTION TEXT ---
+        tk.Label(main_content, text="Question:", font=('Helvetica', 14, 'bold'), bg=COLOR_CARD_BG, fg=COLOR_TEXT_DARK).pack(anchor='w', padx=20, pady=(20, 5))
+        q_frame = tk.Frame(main_content, height=180, bg=COLOR_CARD_BG) 
+        q_frame.pack(fill='x', padx=20)
+        q_frame.pack_propagate(False) 
+        q_scrollbar = tk.Scrollbar(q_frame)
+        q_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.question = tk.Text(q_frame, height=5, font=('Helvetica', 14, 'bold'), 
+                                state=tk.DISABLED, wrap=tk.WORD, bg='#f7f7f7', fg=COLOR_TEXT_DARK,
+                                yscrollcommand=q_scrollbar.set, borderwidth=1, relief="flat", highlightthickness=0)
+        self.question.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        q_scrollbar.config(command=self.question.yview)
+
+        # --- SCROLLABLE ANSWER TEXT ---
+        tk.Label(main_content, text="Answer:", font=('Helvetica', 14, 'bold'), bg=COLOR_CARD_BG, fg=COLOR_TEXT_DARK).pack(anchor='w', padx=20, pady=(20, 5))
+        a_frame = tk.Frame(main_content, height=180, bg=COLOR_CARD_BG) 
+        a_frame.pack(fill='x', padx=20, pady=(0, 20))
+        a_frame.pack_propagate(False) 
+        a_scrollbar = tk.Scrollbar(a_frame)
+        a_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.answer = tk.Text(a_frame, height=5, font=('Helvetica', 13), 
+                              fg=COLOR_ACCENT, state=tk.DISABLED, wrap=tk.WORD, bg='#f7f7f7',
+                              yscrollcommand=a_scrollbar.set, borderwidth=1, relief="flat", highlightthickness=0)
+        self.answer.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        a_scrollbar.config(command=self.answer.yview)
         
-        self.answer = tk.Label(main_content, text="Answer", font=('Helvetica', 13),
-                              fg='#4255ff', bg='white', wraplength=600)
-        self.answer.pack(pady=(0, 30), fill='both', expand=True)
+        # --- Controls ---
         
-        self.show_btn = tk.Button(bottom_controls, text="Show Answer", font=('Helvetica', 12, 'bold'),
-                                 bg='#4255ff', fg='white', relief='flat', pady=12,
+        self.show_btn = tk.Button(bottom_controls, text="Show Answer", font=('Helvetica', 13, 'bold'),
+                                 bg=COLOR_ACCENT, fg=COLOR_TEXT_LIGHT, relief='flat', pady=14,
                                  command=self.show_answer)
         self.show_btn.pack(fill='x', pady=(0, 10))
         
-        self.btn_frame = tk.Frame(bottom_controls, bg='white')
+        self.btn_frame = tk.Frame(bottom_controls, bg=COLOR_CARD_BG)
         self.btn_frame.pack(fill='x')
         
-        self.correct_btn = tk.Button(self.btn_frame, text="Correct", font=('Helvetica', 11, 'bold'),
-                                     bg='#10b981', fg='white', relief='flat', pady=10,
-                                     command=self.correct, state="disabled")
+        self.correct_btn = tk.Button(self.btn_frame, text="Correct", font=('Helvetica', 12, 'bold'),
+                                     bg=COLOR_SUCCESS_GREEN, fg=COLOR_TEXT_LIGHT, relief='flat', pady=12,
+                                     command=self.correct)
         
-        self.wrong_btn = tk.Button(self.btn_frame, text="Wrong", font=('Helvetica', 11, 'bold'),
-                                   bg='#ef4444', fg='white', relief='flat', pady=10,
-                                   command=self.wrong, state="disabled")
+        self.wrong_btn = tk.Button(self.btn_frame, text="Wrong", font=('Helvetica', 12, 'bold'),
+                                   bg='#ef4444', fg=COLOR_TEXT_LIGHT, relief='flat', pady=12,
+                                   command=self.wrong)
         
-        self.next_btn = tk.Button(bottom_controls, text="Next (Marked Wrong)", font=('Helvetica', 12, 'bold'),
-                                 bg='#6b7280', fg='white', relief='flat', pady=12,
-                                 command=self.next_q, state="disabled")
-        self.next_btn.pack(fill='x', pady=10)
+        # Renamed next_btn to skip_btn for clarity in QUESTION_STATE
+        self.skip_btn = tk.Button(bottom_controls, text="Skip Card", font=('Helvetica', 13, 'bold'),
+                                 bg='#6b7280', fg=COLOR_TEXT_LIGHT, relief='flat', pady=14,
+                                 command=self.wrong) # Skips count as wrong/not correct
+        self.skip_btn.pack(fill='x', pady=10)
         
-        tk.Button(bottom_controls, text="Quit Practice", font=('Helvetica', 12, 'bold'),
-                 bg='#aaa', fg='white', relief='flat', pady=10,
+        tk.Button(bottom_controls, text="Quit Practice", font=('Helvetica', 13, 'bold'),
+                 bg=COLOR_PRIMARY_DARK, fg=COLOR_TEXT_LIGHT, relief='flat', pady=14,
                  command=lambda: controller.show_frame("MainMenu")).pack(fill='x')
         
-        self.threshold = 350
+        self.threshold = 400
         self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
         self.after(100, self.trigger_resize)
@@ -515,75 +546,100 @@ class PracticePage(BasePage):
         if width < self.threshold and self.is_horizontal is not False:
             self.correct_btn.pack_forget()
             self.wrong_btn.pack_forget()
-            self.correct_btn.pack(side='top', fill='x', pady=(0, 5))
-            self.wrong_btn.pack(side='top', fill='x', pady=(5, 0))
+            self.correct_btn.pack(side='top', fill='x', pady=(0, 8))
+            self.wrong_btn.pack(side='top', fill='x', pady=(8, 0))
             self.is_horizontal = False
         
         elif width >= self.threshold and self.is_horizontal is not True:
             self.correct_btn.pack_forget()
             self.wrong_btn.pack_forget()
-            self.correct_btn.pack(side='left', fill='x', expand=True, padx=(0, 5))
-            self.wrong_btn.pack(side='right', fill='x', expand=True, padx=(5, 0))
+            self.correct_btn.pack(side='left', fill='x', expand=True, padx=(0, 8))
+            self.wrong_btn.pack(side='right', fill='x', expand=True, padx=(8, 0))
             self.is_horizontal = True
 
+    def _set_text(self, text_widget, content):
+        """Helper to safely insert text into a read-only Text widget."""
+        text_widget.config(state=tk.NORMAL)
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert("1.0", content)
+        text_widget.config(state=tk.DISABLED)
+        # Scroll to top
+        text_widget.yview_moveto(0)
+
+    def _set_controls(self, state):
+        """State Machine: Configures buttons based on the current practice state."""
+        self.current_state = state
+        
+        if state == self.QUESTION_STATE:
+            # Only 'Show Answer' and 'Skip' are active before answering
+            self.show_btn.config(state="normal", text="Show Answer")
+            self.skip_btn.config(state="normal", text="Skip Card")
+            self.correct_btn.config(state="disabled")
+            self.wrong_btn.config(state="disabled")
+        
+        elif state == self.ANSWER_STATE:
+            # Only 'Correct' and 'Wrong' are active after the answer is shown
+            self.show_btn.config(state="disabled", text="Answer Shown")
+            self.skip_btn.config(state="disabled", text="Skip Card") # Disable skip after answer is revealed
+            self.correct_btn.config(state="normal")
+            self.wrong_btn.config(state="normal")
+        
     def refresh(self):
+        # Start a new session
         self.cards = list(self.controller.flashcards.items())
         random.shuffle(self.cards)
         self.index = 0
-        self.answered = False
         
         self.stats.reset(len(self.cards))
         self.score_lbl.config(text=self.stats.get_display())
         
-        self.show_question()
+        self.show_card()
         self.is_horizontal = None
         self.after(50, self.trigger_resize)
         
-    def show_question(self):
+    def show_card(self):
+        """Presents the next question card."""
         if self.index < len(self.cards):
             q, _ = self.cards[self.index]
-            self.question.config(text=q)
-            self.answer.config(text="")
+            self._set_text(self.question, q) 
+            self._set_text(self.answer, "") # Clear previous answer
             self.progress.config(text=f"Card {self.index + 1} of {len(self.cards)}")
-            self.answered = False
-            self.show_btn.config(state="normal", text="Show Answer")
-            self.next_btn.config(state="disabled")
-            self.correct_btn.config(state="disabled")
-            self.wrong_btn.config(state="disabled")
+            self._set_controls(self.QUESTION_STATE) # Set buttons for QUESTION_STATE
         else:
             self.finish()
 
     def show_answer(self):
-        if not self.answered:
+        """Transitions from QUESTION_STATE to ANSWER_STATE."""
+        if self.current_state == self.QUESTION_STATE:
             _, a = self.cards[self.index]
-            self.answer.config(text=a)
-            self.answered = True
-            self.show_btn.config(state="disabled", text="Answer Shown")
-            self.next_btn.config(state="normal")
-            self.correct_btn.config(state="normal")
-            self.wrong_btn.config(state="normal")
+            self._set_text(self.answer, a)
+            self._set_controls(self.ANSWER_STATE) # Set buttons for ANSWER_STATE
 
-    def next_q(self):
-        self.wrong() 
+    def next_card(self):
+        """Moves to the next card, regardless of whether it was correct or wrong."""
+        self.index += 1
+        self.show_card()
 
     def correct(self):
-        self.stats.increment_score()
-        self.score_lbl.config(text=self.stats.get_display())
-        
-        self.index += 1
-        self.show_question()
+        """Handles a correct answer and moves to the next card."""
+        if self.current_state == self.ANSWER_STATE:
+            self.stats.increment_score()
+            self.score_lbl.config(text=self.stats.get_display())
+            self.next_card()
 
     def wrong(self):
-        self.index += 1
-        self.show_question()
+        """Handles a wrong or skipped answer and moves to the next card."""
+        # This function can be called from QUESTION_STATE (via Skip) or ANSWER_STATE (via Wrong)
+        self.next_card()
 
     def finish(self):
+        """Ends the practice session."""
         pct = self.stats.get_percentage()
         score = self.stats.get_score()
         total = self.stats.get_total_cards()
             
-        messagebox.showinfo("Complete!", 
-                          f"Score: {score}/{total} ({pct}%)")
+        messagebox.showinfo("Practice Complete!", 
+                          f"You finished your session!\nScore: {score}/{total} ({pct}%)")
         self.controller.show_frame("MainMenu")
 
 if __name__ == "__main__":
