@@ -60,11 +60,13 @@ class FlashcardApp(tk.Tk):
         self.title("Flashcard Master")
         self.configure(bg='#4255ff')
         
+        # 1. 👻 HIDE THE ROOT WINDOW IMMEDIATELY
+        self.withdraw() # Prevents the blank window flash
+        
         # --- WINDOW CENTERING CALCULATION ---
         window_width = 700
         window_height = 550
         
-        # Must be called to get accurate screen dimensions
         self.update_idletasks() 
 
         screen_width = self.winfo_screenwidth()
@@ -96,7 +98,10 @@ class FlashcardApp(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame("MainMenu")
-
+        
+        # 2. 🖥️ SHOW THE WINDOW ONLY AFTER IT'S FULLY CONFIGURED AND POSITIONED
+        self.deiconify()
+        
     def show_frame(self, page_name):
         """Shows the frame with the given page_name."""
         frame = self.frames[page_name]
