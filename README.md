@@ -1,14 +1,12 @@
-Here is the updated README file, now including the instructions for cloning the repository.
 
------
 
-# 🎯 Flashcard Master
+#  Flashcard Master
 
 This is a simple, no-fuss flashcard app built with Python.
 
 It's designed to be a straightforward, digital version of traditional index cards for studying. The best part? It runs **100% locally** on your computer. You don't need an internet connection, and you don't have to worry about a web server losing your data. Your flashcards are always safe and accessible right on your machine.
 
-## ✨ Features
+## Features
 
   * **Add & Save:** Quickly create new flashcards with a question and an answer.
   * **Edit:** Easily fix typos or update your existing cards.
@@ -98,4 +96,4 @@ The app is built around the **Main Menu**. From here, you can navigate to all th
 4.  Click the **"Delete Selected"** button.
 5.  A confirmation box will pop up. Click "Yes" to permanently delete it.
 
-> **⚠️ Be Careful:** There is also a **"Delete All"** button. This will wipe out your *entire* deck. It will ask you to confirm, but once they're gone, they're gone\!
+> ** Be Careful:** There is also a **"Delete All"** button. This will wipe out your *entire* deck. It will ask you to confirm, but once they're gone, they're gone\!
