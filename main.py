@@ -1,16 +1,80 @@
-import tkinter as tk
-from tkinter import messagebox, font
 import random
 import json
 import os
-from abc import ABC, abstractmethod  # --- ADDED: For abstraction ---
+from abc import ABC, abstractmethod
+
+# --- Robust Tkinter Import ---
+try:
+    import tkinter as tk
+    from tkinter import messagebox, font
+except ImportError:
+    try:
+        # Fallback for Python 2
+        import Tkinter as tk
+        import tkMessageBox as messagebox
+        import tkFont as font
+    except ImportError:
+        print("Error: Tkinter/Tkinter module not found. The application cannot run.")
+        exit()
+
+
+# --- COMPOSITION: StatTracker Class (No @property) ---
+class StatTracker:
+    """Manages and calculates statistics for the PracticePage."""
+    def __init__(self):
+        self._score = 0
+        self._total_cards = 0
+
+    def get_score(self):
+        """Returns the current score."""
+        return self._score
+
+    def get_total_cards(self):
+        """Returns the total number of cards in the session."""
+        return self._total_cards
+
+    def reset(self, total_cards):
+        """Resets stats for a new practice session."""
+        self._score = 0
+        self._total_cards = total_cards
+
+    def increment_score(self):
+        """Adds one point to the score."""
+        self._score += 1
+
+    def get_percentage(self):
+        """Calculates the score percentage."""
+        try:
+            return round((self._score / self._total_cards) * 100, 1)
+        except ZeroDivisionError:
+            return 0.0
+
+    def get_display(self):
+        """Returns the score string for display (e.g., 'Score: 5/10')."""
+        return f"Score: {self._score}/{self._total_cards}"
+
 
 class FlashcardApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Flashcard Master")
-        self.geometry("700x550")
         self.configure(bg='#4255ff')
+        
+        # --- WINDOW CENTERING CALCULATION ---
+        window_width = 700
+        window_height = 550
+        
+        # Must be called to get accurate screen dimensions
+        self.update_idletasks() 
+
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        center_x = int((screen_width / 2) - (window_width / 2))
+        center_y = int((screen_height / 2) - (window_height / 2))
+
+        # Set geometry: size + position
+        self.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
         
         self.data_file = "flashcards.json"
         self.flashcards = self.load_flashcards()
@@ -25,7 +89,6 @@ class FlashcardApp(tk.Tk):
 
         self.frames = {}
         
-        # --- CHANGED: Pages are now classes, not strings ---
         for F in (MainMenu, AddPage, EditPage, DeletePage, PracticePage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
@@ -37,7 +100,6 @@ class FlashcardApp(tk.Tk):
     def show_frame(self, page_name):
         """Shows the frame with the given page_name."""
         frame = self.frames[page_name]
-        # --- CHANGED: All frames MUST have refresh(), per BasePage ABC ---
         frame.refresh() 
         frame.tkraise()
 
@@ -50,9 +112,8 @@ class FlashcardApp(tk.Tk):
     def refresh_main_menu_count(self):
         main_menu_frame = self.frames.get("MainMenu")
         if main_menu_frame:
-            main_menu_frame.refresh() # Its refresh method updates the count
+            main_menu_frame.refresh()
 
-    # --- HELPER: Centralized default cards ---
     def get_default_cards(self):
         return {
             "What is the capital of France?": "Paris",
@@ -60,7 +121,6 @@ class FlashcardApp(tk.Tk):
             "Who painted the Mona Lisa?": "Leonardo da Vinci"
         }
 
-    # --- CHANGED: Added robust try...except blocks ---
     def load_flashcards(self):
         if os.path.exists(self.data_file):
             try:
@@ -69,27 +129,29 @@ class FlashcardApp(tk.Tk):
             except json.JSONDecodeError:
                 messagebox.showerror("Load Error", f"Failed to read '{self.data_file}'. File may be corrupt. Loading defaults.")
                 return self.get_default_cards()
+            except IOError as e:
+                messagebox.showerror("Load Error", f"File I/O error occurred: {e}. Loading defaults.")
+                return self.get_default_cards()
             except Exception as e:
-                messagebox.showerror("Load Error", f"An unexpected error occurred: {e}")
+                messagebox.showerror("Load Error", f"An unexpected error occurred: {e}. Loading defaults.")
                 return self.get_default_cards()
         
-        # File doesn't exist, create it with defaults
         default = self.get_default_cards()
-        self.save_flashcards(default) # Save will show its own errors if it fails
+        self.save_flashcards(default)
         return default
 
-    # --- CHANGED: Added robust try...except blocks ---
     def save_flashcards(self, cards=None):
         try:
             with open(self.data_file, 'w', encoding='utf-8') as f:
                 json.dump(cards or self.flashcards, f, indent=2, ensure_ascii=False)
         except PermissionError:
             messagebox.showerror("Save Error", f"Failed to save flashcards to '{self.data_file}'. Check file permissions.")
+        except IOError as e:
+            messagebox.showerror("Save Error", f"File I/O error occurred during save: {e}")
         except Exception as e:
              messagebox.showerror("Save Error", f"An unexpected error occurred during save: {e}")
 
 
-# --- NEW: Abstract Base Class for all pages ---
 class BasePage(tk.Frame, ABC):
     """Abstract base class for all pages, requires a refresh method."""
     def __init__(self, parent, controller):
@@ -101,7 +163,6 @@ class BasePage(tk.Frame, ABC):
         """Called by the controller when the frame is shown."""
         pass
 
-# --- NEW: Mixin for abstracting form field creation ---
 class FormMixin:
     """Mixin to create standard Question and Answer text fields."""
     def create_form_fields(self, parent_frame):
@@ -117,8 +178,6 @@ class FormMixin:
         
         return q_text, a_text
 
-
-# --- CHANGED: Inherits from BasePage ---
 class MainMenu(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -143,14 +202,10 @@ class MainMenu(BasePage):
                           relief='flat', bd=0, pady=15, cursor='hand2', command=cmd)
             btn.pack(fill='x', padx=60, pady=8)
 
-    # --- IMPLEMENTED from BasePage ---
     def refresh(self):
         count = len(self.controller.flashcards)
         self.count_label.config(text=f"Total Cards: {count}")
 
-
-# --- CHANGED: Inherits from BasePage and FormMixin ---
-# --- Inherits from BasePage and FormMixin ---
 class AddPage(BasePage, FormMixin):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -161,14 +216,11 @@ class AddPage(BasePage, FormMixin):
         frame = tk.Frame(self, bg='white')
         frame.pack(fill='both', expand=True, padx=40, pady=20)
         
-        # --- Use the FormMixin to create fields ---
         self.q_text, self.a_text = self.create_form_fields(frame)
         
-        # --- CHANGED: Renamed to self.btn_frame ---
         self.btn_frame = tk.Frame(frame, bg='white')
         self.btn_frame.pack(fill='x', padx=20, side='bottom', pady=(0, 20))
         
-        # --- CHANGED: Stored buttons as attributes ---
         self.add_button = tk.Button(self.btn_frame, text="Add", font=('Helvetica', 12, 'bold'), bg='#10b981',
                  fg='white', relief='flat', pady=10, command=self.add)
         
@@ -176,22 +228,20 @@ class AddPage(BasePage, FormMixin):
                  fg='white', relief='flat', pady=10, 
                  command=lambda: controller.show_frame("MainMenu"))
         
-        # --- NEW: Resize logic ---
-        self.threshold = 350 # Pixel width to stack
-        self.is_horizontal = None # Track layout state
+        self.threshold = 350
+        self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
-        self.after(100, self.trigger_resize) 
-    # --- NEW: Handles responsive button layout ---
+        self.after(100, self.trigger_resize)
+        
     def trigger_resize(self):
         self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
+        
     def on_resize(self, event):
-        # Ignore initial event when widget hasn't drawn
         if event.width == 1 and event.height == 1:
             return 
         
         width = event.width
         
-        # Stack vertically if narrow
         if width < self.threshold and self.is_horizontal is not False:
             self.add_button.pack_forget()
             self.back_button.pack_forget()
@@ -199,7 +249,6 @@ class AddPage(BasePage, FormMixin):
             self.back_button.pack(side='top', fill='x', pady=(5, 0))
             self.is_horizontal = False
         
-        # Place horizontally if wide
         elif width >= self.threshold and self.is_horizontal is not True:
             self.add_button.pack_forget()
             self.back_button.pack_forget()
@@ -207,26 +256,27 @@ class AddPage(BasePage, FormMixin):
             self.back_button.pack(side='right', fill='x', expand=True, padx=(5, 0))
             self.is_horizontal = True
 
-    # --- IMPLEMENTED from BasePage ---
     def refresh(self):
         self.q_text.delete("1.0", tk.END)
         self.a_text.delete("1.0", tk.END)
-        # Force redraw on refresh
         self.is_horizontal = None
         self.after(50, self.trigger_resize)
+        
     def add(self):
-        q = self.q_text.get("1.0", tk.END).strip()
-        a = self.a_text.get("1.0", tk.END).strip()
-        if q and a:
-            self.controller.flashcards[q] = a
-            self.controller.save_flashcards()
-            self.controller.refresh_main_menu_count() 
-            messagebox.showinfo("Success", "Flashcard added!")
-            self.controller.show_frame("MainMenu")
-        else:
-            messagebox.showwarning("Error", "Both fields required!")
-# --- CHANGED: Inherits from BasePage and FormMixin ---
-# --- Inherits from BasePage and FormMixin ---
+        try:
+            q = self.q_text.get("1.0", tk.END).strip()
+            a = self.a_text.get("1.0", tk.END).strip()
+            if q and a:
+                self.controller.flashcards[q] = a
+                self.controller.save_flashcards()
+                self.controller.refresh_main_menu_count() 
+                messagebox.showinfo("Success", "Flashcard added!")
+                self.controller.show_frame("MainMenu")
+            else:
+                messagebox.showwarning("Error", "Both fields required!")
+        except Exception as e:
+            messagebox.showerror("Add Error", f"Failed to add card: {e}")
+
 class EditPage(BasePage, FormMixin):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -245,14 +295,11 @@ class EditPage(BasePage, FormMixin):
         right = tk.Frame(frame, bg='white')
         right.pack(side='right', fill='both', expand=True, padx=(10, 20), pady=20)
         
-        # --- Use the FormMixin to create fields ---
         self.q_text, self.a_text = self.create_form_fields(right)
         
-        # --- CHANGED: Renamed to self.btn_frame ---
         self.btn_frame = tk.Frame(right, bg='white')
         self.btn_frame.pack(fill='x', side='bottom', pady=(0, 20))
         
-        # --- CHANGED: Stored buttons as attributes ---
         self.save_button = tk.Button(self.btn_frame, text="Save", font=('Helvetica', 11, 'bold'), bg='#f59e0b',
                  fg='white', relief='flat', pady=10, command=self.save)
 
@@ -260,13 +307,11 @@ class EditPage(BasePage, FormMixin):
                  fg='white', relief='flat', pady=10, 
                  command=lambda: controller.show_frame("MainMenu"))
         
-        # --- NEW: Resize logic ---
-        self.threshold = 350 # Pixel width to stack
-        self.is_horizontal = None # Track layout state
+        self.threshold = 350
+        self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
         self.after(100, self.trigger_resize)
 
-    # --- NEW: Handles responsive button layout ---
     def on_resize(self, event):
         if event.width == 1 and event.height == 1:
             return 
@@ -286,9 +331,10 @@ class EditPage(BasePage, FormMixin):
             self.save_button.pack(side='left', fill='x', expand=True, padx=(0, 5))
             self.back_button.pack(side='right', fill='x', expand=True, padx=(5, 0))
             self.is_horizontal = True
+            
     def trigger_resize(self):
         self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
-    # --- IMPLEMENTED from BasePage ---
+        
     def refresh(self):
         self.listbox.delete(0, tk.END)
         self.q_text.delete("1.0", tk.END)
@@ -296,9 +342,9 @@ class EditPage(BasePage, FormMixin):
         self.selected = None
         for q in sorted(self.controller.flashcards.keys()):
             self.listbox.insert(tk.END, q[:60])
-        # Force redraw on refresh
         self.is_horizontal = None
         self.after(50, self.trigger_resize)
+        
     def load(self, event):
         try:
             sel_index = self.listbox.curselection()[0]
@@ -311,22 +357,29 @@ class EditPage(BasePage, FormMixin):
             self.a_text.insert("1.0", self.controller.flashcards[self.selected])
         except IndexError:
             pass 
+        except Exception as e:
+            messagebox.showerror("Load Error", f"Failed to load card for editing: {e}")
 
     def save(self):
-        if self.selected:
-            new_q = self.q_text.get("1.0", tk.END).strip()
-            new_a = self.a_text.get("1.0", tk.END).strip()
-            if not (new_q and new_a):
-                messagebox.showwarning("Error", "Both fields required!")
-                return
-                
-            if new_q != self.selected:
-                del self.controller.flashcards[self.selected]
-            self.controller.flashcards[new_q] = new_a
-            self.controller.save_flashcards()
-            messagebox.showinfo("Success", "Updated!")
-            self.controller.show_frame("MainMenu")
-# --- CHANGED: Inherits from BasePage ---
+        try:
+            if self.selected:
+                new_q = self.q_text.get("1.0", tk.END).strip()
+                new_a = self.a_text.get("1.0", tk.END).strip()
+                if not (new_q and new_a):
+                    messagebox.showwarning("Error", "Both fields required!")
+                    return
+                    
+                if new_q != self.selected:
+                    del self.controller.flashcards[self.selected]
+                self.controller.flashcards[new_q] = new_a
+                self.controller.save_flashcards()
+                messagebox.showinfo("Success", "Updated!")
+                self.controller.show_frame("MainMenu")
+            else:
+                messagebox.showwarning("No Selection", "Please select a card to save.")
+        except Exception as e:
+            messagebox.showerror("Save Error", f"Failed to save card: {e}")
+
 class DeletePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -351,7 +404,6 @@ class DeletePage(BasePage):
                  bg='#6b7280', fg='white', relief='flat', pady=12,
                  command=lambda: controller.show_frame("MainMenu")).pack(side='right', fill='x', expand=True, padx=(5, 0))
 
-    # --- IMPLEMENTED from BasePage ---
     def refresh(self):
         self.listbox.delete(0, tk.END)
         for q in sorted(self.controller.flashcards.keys()):
@@ -368,20 +420,22 @@ class DeletePage(BasePage):
                 self.controller.save_flashcards()
                 self.controller.refresh_main_menu_count()
                 messagebox.showinfo("Success", "Deleted!")
-                self.controller.show_frame("MainMenu") # Go back to menu
+                self.controller.show_frame("MainMenu")
         except IndexError:
             messagebox.showwarning("No Selection", "Please select a card to delete.")
+        except Exception as e:
+            messagebox.showerror("Delete Error", f"Failed to delete card: {e}")
 
 
-# --- CHANGED: Inherits from BasePage ---
-# --- Inherits from BasePage ---
 class PracticePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         
+        # --- COMPOSITION: StatTracker instance ---
+        self.stats = StatTracker()
+        
         self.cards = []
         self.index = 0
-        self.score = 0
         self.answered = False
         
         tk.Label(self, text="Practice Mode", font=('Helvetica', 20, 'bold'),
@@ -419,11 +473,9 @@ class PracticePage(BasePage):
                                  command=self.show_answer)
         self.show_btn.pack(fill='x', pady=(0, 10))
         
-        # --- CHANGED: Renamed to self.btn_frame ---
         self.btn_frame = tk.Frame(bottom_controls, bg='white')
         self.btn_frame.pack(fill='x')
         
-        # --- CHANGED: Stored buttons as attributes ---
         self.correct_btn = tk.Button(self.btn_frame, text="Correct", font=('Helvetica', 11, 'bold'),
                                      bg='#10b981', fg='white', relief='flat', pady=10,
                                      command=self.correct, state="disabled")
@@ -441,22 +493,20 @@ class PracticePage(BasePage):
                  bg='#aaa', fg='white', relief='flat', pady=10,
                  command=lambda: controller.show_frame("MainMenu")).pack(fill='x')
         
-        # --- NEW: Resize logic ---
-        self.threshold = 350 # Pixel width to stack
-        self.is_horizontal = None # Track layout state
+        self.threshold = 350
+        self.is_horizontal = None
         self.bind("<Configure>", self.on_resize)
         self.after(100, self.trigger_resize)
 
-    # --- NEW: Handles responsive button layout ---
     def trigger_resize(self):
         self.on_resize(type('Event', (), {'width': self.winfo_width(), 'height': self.winfo_height()})())
+        
     def on_resize(self, event):
         if event.width == 1 and event.height == 1:
             return 
         
         width = event.width
         
-        # Stack vertically if narrow
         if width < self.threshold and self.is_horizontal is not False:
             self.correct_btn.pack_forget()
             self.wrong_btn.pack_forget()
@@ -464,7 +514,6 @@ class PracticePage(BasePage):
             self.wrong_btn.pack(side='top', fill='x', pady=(5, 0))
             self.is_horizontal = False
         
-        # Place horizontally if wide
         elif width >= self.threshold and self.is_horizontal is not True:
             self.correct_btn.pack_forget()
             self.wrong_btn.pack_forget()
@@ -472,18 +521,19 @@ class PracticePage(BasePage):
             self.wrong_btn.pack(side='right', fill='x', expand=True, padx=(5, 0))
             self.is_horizontal = True
 
-    # --- IMPLEMENTED from BasePage ---
     def refresh(self):
         self.cards = list(self.controller.flashcards.items())
         random.shuffle(self.cards)
         self.index = 0
-        self.score = 0
         self.answered = False
-        self.score_lbl.config(text=f"Score: {self.score}")
+        
+        self.stats.reset(len(self.cards))
+        self.score_lbl.config(text=self.stats.get_display())
+        
         self.show_question()
-        # Force redraw on refresh
         self.is_horizontal = None
         self.after(50, self.trigger_resize)
+        
     def show_question(self):
         if self.index < len(self.cards):
             q, _ = self.cards[self.index]
@@ -512,8 +562,9 @@ class PracticePage(BasePage):
         self.wrong() 
 
     def correct(self):
-        self.score += 1
-        self.score_lbl.config(text=f"Score: {self.score}")
+        self.stats.increment_score()
+        self.score_lbl.config(text=self.stats.get_display())
+        
         self.index += 1
         self.show_question()
 
@@ -522,13 +573,12 @@ class PracticePage(BasePage):
         self.show_question()
 
     def finish(self):
-        try:
-            pct = round((self.score / len(self.cards)) * 100, 1)
-        except ZeroDivisionError:
-            pct = 0.0
+        pct = self.stats.get_percentage()
+        score = self.stats.get_score()
+        total = self.stats.get_total_cards()
             
         messagebox.showinfo("Complete!", 
-                          f"Score: {self.score}/{len(self.cards)} ({pct}%)")
+                          f"Score: {score}/{total} ({pct}%)")
         self.controller.show_frame("MainMenu")
 
 if __name__ == "__main__":
